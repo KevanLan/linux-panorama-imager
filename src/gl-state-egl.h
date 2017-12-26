@@ -1,0 +1,147 @@
+#ifndef GL_STATE_EGL_H_
+#define GL_STATE_EGL_H_
+
+#include <vector>
+#include <EGL/egl.h>
+#include "gl-state.h"
+#include "gl-visual-config.h"
+
+class EglConfig
+{
+    EGLConfig handle_;
+    // Color buffer attributes.
+    EGLint bufferSize_;
+    EGLint redSize_;
+    EGLint greenSize_;
+    EGLint blueSize_;
+    EGLint luminanceSize_;
+    EGLint alphaSize_;
+    EGLint alphaMaskSize_;
+    bool bindTexRGB_;
+    bool bindTexRGBA_;
+    EGLint bufferType_;
+    // Base config attributes
+    EGLint caveat_;
+    EGLint configID_;
+    EGLint conformant_;
+    // Depth buffer
+    EGLint depthSize_;
+    // Framebuffer level
+    EGLint level_;
+    // Pbuffers
+    EGLint pbufferWidth_;
+    EGLint pbufferHeight_;
+    EGLint pbufferPixels_;
+    // Swap interval
+    EGLint minSwapInterval_;
+    EGLint maxSwapInterval_;
+    // Native window system attributes.
+    EGLint nativeID_;
+    EGLint nativeType_;
+    bool nativeRenderable_;
+    // Multisample support
+    EGLint sampleBuffers_;
+    EGLint samples_;
+    // Stencil buffer
+    EGLint stencilSize_;
+    EGLint surfaceType_;
+    // Transparency
+    EGLint xparentType_; // Should be RGB or NONE
+    EGLint xparentRedValue_;
+    EGLint xparentGreenValue_;
+    EGLint xparentBlueValue_;
+
+public:
+    EglConfig() :
+        handle_(0),
+        bufferSize_(0),
+        redSize_(0),
+        greenSize_(0),
+        blueSize_(0),
+        luminanceSize_(0),
+        alphaSize_(0),
+        alphaMaskSize_(0),
+        bindTexRGB_(false),
+        bindTexRGBA_(false),
+        bufferType_(EGL_RGB_BUFFER),
+        caveat_(0),
+        configID_(0),
+        conformant_(0),
+        depthSize_(0),
+        level_(0),
+        pbufferWidth_(0),
+        pbufferHeight_(0),
+        pbufferPixels_(0),
+        minSwapInterval_(0),
+        maxSwapInterval_(0),
+        nativeID_(0),
+        nativeType_(0),
+        nativeRenderable_(false),
+        sampleBuffers_(0),
+        samples_(0),
+        stencilSize_(0),
+        surfaceType_(0),
+        xparentType_(0),
+        xparentRedValue_(0),
+        xparentGreenValue_(0),
+        xparentBlueValue_(0) {}
+    EglConfig(EGLDisplay dpy, EGLConfig config);
+    ~EglConfig() {}
+    void print() const;
+    static void print_header();
+    bool isWindowConfig() const { return surfaceType_ & EGL_WINDOW_BIT; }
+    EGLint configID() const { return configID_; }
+};
+
+class GLStateEGL : public GLState
+{
+    EGLNativeDisplayType native_display_;
+    EGLNativeWindowType native_window_;
+    EGLDisplay egl_display_;
+    EGLConfig egl_config_;
+    EGLContext egl_context_;
+    EGLSurface egl_surface_;
+    GLVisualConfig requested_visual_config_;
+    EglConfig best_config_;
+    bool gotValidDisplay();
+    bool gotValidConfig();
+    bool gotValidSurface();
+    bool gotValidContext();
+    void get_glvisualconfig(EGLConfig config, GLVisualConfig& visual_config);
+    EGLConfig select_best_config(std::vector<EGLConfig>& configs);
+public:
+    GLStateEGL() :
+        native_display_(0),
+        native_window_(0),
+        egl_display_(0),
+        egl_config_(0),
+        egl_context_(0),
+        egl_surface_(0) {}
+
+    bool init_display(void* native_display, GLVisualConfig& config_pref);
+    bool init_surface(void* native_window);
+    void init_gl_extensions();
+    bool valid();
+    bool reset();
+    void swap();
+    // Performs a config search, returning a native visual ID on success
+    bool gotNativeConfig(int& vid);
+    void getVisualConfig(GLVisualConfig& vc);
+
+    EGLNativeDisplayType getDisplay()
+    {
+        return (EGLNativeDisplayType)egl_display_;
+    }
+
+    EGLSurface getSurface()
+    {
+        return egl_surface_;
+    }
+
+    EGLContext getContext()
+    {
+        return egl_context_;
+    }
+};
+
+#endif // GL_STATE_EGL_H_
